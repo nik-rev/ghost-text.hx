@@ -1,4 +1,5 @@
 use futures_util::{SinkExt, StreamExt};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::{io::AsyncWriteExt, net::TcpListener};
 use tokio_tungstenite::{
@@ -8,6 +9,52 @@ use tokio_tungstenite::{
         handshake::{client::Request, server::Response},
     },
 };
+
+/// We send this response to the browser extension to establish a connection
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct ActivateEditing {
+    /// The protocol version
+    protocol_version: u32,
+    /// The port for the listening WebSocket
+    ///
+    /// This ideally is the same configured HTTP port (default 4001) but
+    /// it does not have to be.
+    web_socket_port: u32,
+}
+
+/// Represents a selected region of text
+#[derive(Serialize, Deserialize)]
+struct Selection {
+    /// 0-indexed start of the selection
+    start: u32,
+    /// 0-indexed end of the selection
+    end: u32,
+}
+
+/// User makes a change in the browser
+#[derive(Serialize, Deserialize)]
+struct BrowserChange {
+    /// The title of the document
+    title: String,
+    /// The host of the document's url
+    url: String,
+    /// Not used
+    syntax: String,
+    /// Value of the text content
+    text: String,
+    /// User's selections in the browser
+    selections: Vec<Selection>,
+}
+
+/// User makes a change in the editor
+#[derive(Serialize, Deserialize)]
+struct EditorChange {
+    /// The temporary file content
+    text: String,
+    /// User's selections in the browser
+    selections: Vec<Selection>,
+}
 
 const PORT: u16 = 4001;
 
@@ -20,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     log::info!("listening on ws://{addr}");
 
-    while let Ok((mut stream, peer)) = listener.accept().await {
+    while let Ok((mut stream, addr)) = listener.accept().await {
         tokio::spawn(async move {
             let mut peek_buf = [0u8; 1024];
             let n = match stream.peek(&mut peek_buf).await {
@@ -34,21 +81,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let header = String::from_utf8_lossy(&peek_buf[..n]);
 
             if header.contains("Upgrade: websocket") {
-                let ws_stream = match accept_hdr_async(stream, |req: &Request, res: Response| {
-                    log::info!("WebSocket request from: {:?}", req.uri());
-                    Ok(res)
-                })
-                .await
-                {
-                    Ok(ws) => ws,
-                    Err(e) => {
-                        log::error!("WebSocket upgrade failed: {e}");
-                        return;
-                    }
-                };
-
-                let mut ws_stream = ws_stream;
-                let addr = peer;
+                let mut ws_stream =
+                    match accept_hdr_async(stream, |req: &Request, res: Response| {
+                        log::info!("WebSocket request from: {:?}", req.uri());
+                        Ok(res)
+                    })
+                    .await
+                    {
+                        Ok(ws) => ws,
+                        Err(e) => {
+                            log::error!("WebSocket upgrade failed: {e}");
+                            return;
+                        }
+                    };
 
                 log::info!("WebSocket connection established with {addr}");
 
