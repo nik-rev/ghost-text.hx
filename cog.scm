@@ -22,8 +22,11 @@
         (editor-focus)))))
 
 ; This is where we want to send things to the GhostText server
-(define (handle-post-command name-of-command)
+(define (notify-ghost-text-server name-of-command)
   (log::info! (get-current-text)))
 
 ; When we run any command in Helix, send it to the Ghost Text server
-(register-hook! "post-command" handle-post-command)
+(register-hook! "post-command" notify-ghost-text-server)
+; The above does not account for when we simply insert characters,
+; in which case we *also* want to notify the Ghost Text server
+(register-hook! "post-insert-char" notify-ghost-text-server)
