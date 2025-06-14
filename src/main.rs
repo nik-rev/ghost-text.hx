@@ -1,7 +1,9 @@
-use futures_util::{SinkExt, StreamExt};
+//! A helix ghost-text plugin
+
+use futures_util::{SinkExt as _, StreamExt as _};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tokio::{io::AsyncWriteExt, net::TcpListener};
+use tokio::{io::AsyncWriteExt as _, net::TcpListener};
 use tokio_tungstenite::{
     accept_hdr_async,
     tungstenite::{
@@ -69,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while let Ok((mut stream, addr)) = listener.accept().await {
         tokio::spawn(async move {
-            let mut peek_buf = [0u8; 1024];
+            let mut peek_buf = [0_u8; 1024];
             let n = match stream.peek(&mut peek_buf).await {
                 Ok(n) => n,
                 Err(e) => {
@@ -127,10 +129,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
 
                 if let Err(e) = stream.write_all(response.as_bytes()).await {
-                    log::error!("Failed to establish handshake with GhostText: {}", e);
+                    log::error!("Failed to establish handshake with GhostText: {e}");
                 }
             } else {
-                log::error!("Unknown request type:\n{}", header);
+                log::error!("Unknown request type:\n{header}");
             }
         });
     }
