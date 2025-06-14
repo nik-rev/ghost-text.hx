@@ -1,24 +1,16 @@
 (require "helix/components.scm")
 (require "helix/editor.scm")
-(require-builtin helix/core/text as text.)
-(require-builtin helix/core/static as static.)
+(require-builtin helix/core/text as text::)
+(require-builtin helix/core/static as static::)
 
-; Get a `Selection` of the current file
-(define (get-current-selection) (static.current-selection-object))
+; Get the `Selection` for the current file
+(define (get-current-selection) (static::current-selection-object))
 
-; Get a `String` representing the text of the current file
+; Get contents of the current file as a `String`
 (define (get-current-text)
-  ; `rope->string` takes `Rope`
-  ;   return `String`
-  (text.rope->string
-    ; `editor->text` takes DocumentId
-    ;   return `Rope`
+  (text::rope->string
     (editor->text
-      ; `editor->doc-id` takes `ViewId`
-      ;   return `DocumentId`
       (editor->doc-id
-        ; `editor-focus`
-        ;   return `ViewId` of focused
         (editor-focus)))))
 
 ; This is where we want to send things to the GhostText server
