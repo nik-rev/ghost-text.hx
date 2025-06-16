@@ -65,6 +65,7 @@ jobs:
         shell: bash
         run: |
           ARTIFACT_PATH=$(find target/${{ matrix.target }}/release -name "${{ matrix.asset_name }}")
+          ls target/${{ matrix.target }}/release
           echo "Found artifact at: $ARTIFACT_PATH"
           mv "$ARTIFACT_PATH" "./${{ matrix.asset_name }}"
 
