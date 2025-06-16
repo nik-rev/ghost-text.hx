@@ -1,6 +1,7 @@
 //! The Ghost Text server
 
 use std::io::Write as _;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 
@@ -9,6 +10,7 @@ use futures_util::{SinkExt as _, StreamExt as _};
 
 use serde_json::json;
 use steel::rvals::Custom;
+use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::sync::oneshot;
@@ -109,90 +111,13 @@ impl Server {
                                 let _ = tx.send(msg);
                             }
                          }
-                        Ok((mut stream, addr)) = listener.accept() => {
-                            let this = self.clone();
-                            tokio::spawn(async move {
-                                let mut buf = [0_u8; 1024];
-                                let n = match stream.peek(&mut buf).await {
-                                    Ok(n) => n,
-                                    Err(e) => {
-                                        log::error!("peek failed: {e}");
-                                        return;
-                                    }
-                                };
-
-                                let header = String::from_utf8_lossy(&buf[..n]);
-
-                                if header.contains("Upgrade: websocket") {
-                                    let ws_stream = match accept_hdr_async(stream, |req: &Request, res| {
-                                        log::info!("WebSocket request from: {:?}", req.uri());
-                                        Ok(res)
-                                    }).await {
-                                        Ok(ws) => ws,
-                                        Err(e) => {
-                                            log::error!("WebSocket upgrade failed: {e}");
-                                            return;
-                                        }
-                                    };
-
-                                    log::info!("WebSocket connection from {addr}");
-
-                                    let (mut write, mut read) = ws_stream.split();
-                                    let (tx, mut rx) = mpsc::unbounded_channel();
-
-                                    {
-                                        let mut lock = this.sender.lock().await;
-                                        *lock = Some(tx);
-                                    }
-
-                                    let forward = tokio::spawn(async move {
-                                        while let Some(msg) = rx.recv().await {
-                                            if let Err(e) = write.send(msg).await {
-                                                log::error!("send error: {e}");
-                                                break;
-                                            }
-                                        }
-                                    });
-
-                                    while let Some(msg) = read.next().await {
-                                        match msg {
-                                            Ok(Message::Text(txt)) => match serde_json::de::from_str::<BrowserChange>(&txt) {
-                                                Ok(change) => log::info!("{change:?}"),
-                                                Err(err) => {
-                                                    log::error!("failed to deserialize browser change: {err}");
-                                                }
-                                            },
-                                            Ok(Message::Close(_)) => break,
-                                            Ok(_) => {},
-                                            Err(e) => {
-                                                log::error!("read error: {e}");
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    forward.abort();
-                                    let mut lock = this.sender.lock().await;
-                                    *lock = None;
-                                } else if header.starts_with("GET / HTTP/1.1") {
-                                    let body = json!({
-                                        "ProtocolVersion": 1,
-                                        "WebSocketPort": Self::PORT
-                                    }).to_string();
-
-                                    let response = format!(
-                                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
-                                        body.len()
-                                    );
-
-                                    let _ = stream.write_all(response.as_bytes()).await;
-                                }
-                            });
+                        Ok((stream, addr)) = listener.accept() => {
+                            self.clone().accept_connection(stream, addr);
                         }
                     }
                 }
 
-                #[allow(unreachable_code, reason = "todo")]
+                #[allow(unreachable_code, reason = "for type inference")]
                 Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
             } => {},
 
@@ -202,6 +127,92 @@ impl Server {
         }
 
         Ok(())
+    }
+
+    /// Accept websocket connection
+    fn accept_connection(self, mut stream: TcpStream, addr: SocketAddr) {
+        tokio::spawn(async move {
+            let mut buf = [0_u8; 1024];
+            let n = match stream.peek(&mut buf).await {
+                Ok(n) => n,
+                Err(e) => {
+                    log::error!("peek failed: {e}");
+                    return;
+                }
+            };
+
+            let header = String::from_utf8_lossy(&buf[..n]);
+
+            if header.contains("Upgrade: websocket") {
+                let ws_stream = match accept_hdr_async(stream, |req: &Request, res| {
+                    log::info!("WebSocket request from: {:?}", req.uri());
+                    Ok(res)
+                })
+                .await
+                {
+                    Ok(ws) => ws,
+                    Err(e) => {
+                        log::error!("WebSocket upgrade failed: {e}");
+                        return;
+                    }
+                };
+
+                log::info!("WebSocket connection from {addr}");
+
+                let (mut write, mut read) = ws_stream.split();
+                let (tx, mut rx) = mpsc::unbounded_channel();
+
+                {
+                    let mut lock = self.sender.lock().await;
+                    *lock = Some(tx);
+                }
+
+                let forward = tokio::spawn(async move {
+                    while let Some(msg) = rx.recv().await {
+                        if let Err(e) = write.send(msg).await {
+                            log::error!("send error: {e}");
+                            break;
+                        }
+                    }
+                });
+
+                while let Some(msg) = read.next().await {
+                    match msg {
+                        Ok(Message::Text(txt)) => {
+                            match serde_json::de::from_str::<BrowserChange>(&txt) {
+                                Ok(change) => log::info!("{change:?}"),
+                                Err(err) => {
+                                    log::error!("failed to deserialize browser change: {err}");
+                                }
+                            }
+                        }
+                        Ok(Message::Close(_)) => break,
+                        Ok(_) => {}
+                        Err(e) => {
+                            log::error!("read error: {e}");
+                            break;
+                        }
+                    }
+                }
+
+                forward.abort();
+                let mut lock = self.sender.lock().await;
+                *lock = None;
+            } else if header.starts_with("GET / HTTP/1.1") {
+                let body = json!({
+                    "ProtocolVersion": 1,
+                    "WebSocketPort": Self::PORT
+                })
+                .to_string();
+
+                let response = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+
+                let _ = stream.write_all(response.as_bytes()).await;
+            }
+        });
     }
 
     /// Initializes logging to `out.log` in the project root.
