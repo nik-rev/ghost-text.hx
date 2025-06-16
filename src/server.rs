@@ -6,7 +6,6 @@ use std::thread::{self, JoinHandle};
 
 use crate::data::{BrowserChange, EditorChange, Selection};
 use futures_util::{SinkExt as _, StreamExt as _};
-use serde::{Deserialize, Serialize};
 
 use serde_json::json;
 use steel::rvals::Custom;
@@ -37,13 +36,6 @@ pub struct Server {
 }
 
 impl Custom for Server {}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[allow(clippy::missing_docs_in_private_items, missing_docs, reason = "todo")]
-struct OutgoingPayload {
-    text: String,
-    selections: Vec<Selection>,
-}
 
 impl Server {
     /// Port for the Ghost Text protocol
