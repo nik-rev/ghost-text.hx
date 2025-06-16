@@ -3,6 +3,10 @@ name = "ghost-text"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "ghost_text"
+crate-type = ["cdylib"]
+
 [dependencies]
 
 # serializaiton
@@ -16,6 +20,10 @@ futures-util = { version = "0.3", default-features = false }
 
 # logging
 log = "0.4.27"
+
+# Steel itself
+steel-core = { rev = "0287954cc6a05bbd794f2636352bf64a71ea176d", git = "https://github.com/mattwparas/steel.git", version = "0.6.0", features = ["dylibs", "sync"] }
+abi_stable = "0.11.3"
 env_logger = "0.11.8"
 
 # ============================
@@ -25,7 +33,6 @@ env_logger = "0.11.8"
 # ============================
 
 [lints.rust]
-unreachable_pub = "warn"
 unused_crate_dependencies = "warn"
 redundant_imports = "warn"
 # Documentation for all public items
@@ -59,6 +66,7 @@ too_many_lines = "allow"
 # if we need it const, make it const.
 # no need to make everything that can be const, const
 missing_const_for_fn = "allow"
+cast_possible_truncation = "allow"
 # ---
 
 # --- more consistent ways of writing code

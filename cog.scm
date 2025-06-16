@@ -2,9 +2,15 @@
 (require "helix/editor.scm")
 (require-builtin helix/core/text as text::)
 (require-builtin helix/core/static as static::)
+(require-builtin steel/json as json::)
 
-; Get the `Selection` for the current file
-(define (get-current-selection) (static::current-selection-object))
+(#%require-dylib "libghost_text"
+  (only-in
+    Server::new
+    Server::start
+    Server::init_logging
+    Server::update
+    Server::stop))
 
 ; Get contents of the current file as a `String`
 (define (get-current-text)
@@ -13,12 +19,37 @@
       (editor->doc-id
         (editor-focus)))))
 
-; This is where we want to send things to the GhostText server
-(define (notify-ghost-text-server name-of-command)
-  (log::info! (get-current-text)))
+; Get a `Vec<(u32, u32)>` corresponding to a list of selections [from, to]
+; for the current file.
+(define (get-current-selection)
+  (map
+    static::range->span
+    (static::selection->ranges
+      (static::current-selection-object *helix.cx*))))
 
-; When we run any command in Helix, send it to the Ghost Text server
-(register-hook! "post-command" notify-ghost-text-server)
-; The above does not account for when we simply insert characters,
-; in which case we *also* want to notify the Ghost Text server
-(register-hook! "post-insert-char" notify-ghost-text-server)
+(Server::init_logging)
+
+(define server (Server::new))
+(define is-server-running #false)
+
+; Start the Ghost Text server
+(define (ghost-text-start)
+  (unless is-server-running
+    (Server::start server)
+    (set! is-server-running #true)
+    "Started Ghost Text server"))
+
+; Stop the Ghost Text server
+(define (ghost-text-stop)
+  (when is-server-running
+    (Server::stop server)
+    (set! is-server-running #false)
+    "Killed Ghost Text server"))
+
+; Update the Ghost Text server
+(define (ghost-text-update)
+  (when is-server-running
+    (Server::update
+      server
+      (get-current-text)
+      (get-current-selection))))
