@@ -53,3 +53,14 @@
       server
       (get-current-text)
       (get-current-selection))))
+
+(define (update-if-running _)
+  (when is-server-running
+    (ghost-text-update)))
+
+; When we run any command in Helix, send it to the Ghost Text server
+(register-hook! "post-command" update-if-running)
+
+; The above does not account for when we simply insert characters,
+; in which case we *also* want to notify the Ghost Text server
+(register-hook! "post-insert-char" update-if-running)
