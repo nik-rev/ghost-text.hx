@@ -64,10 +64,7 @@ jobs:
       - name: Find and rename artifact
         shell: bash
         run: |
-          ARTIFACT_PATH=$(find target/${{ matrix.target }}/release -name "${{ matrix.asset_name }}")
-          ls target/${{ matrix.target }}/release
-          echo "Found artifact at: $ARTIFACT_PATH"
-          mv "$ARTIFACT_PATH" "./${{ matrix.asset_name }}"
+          mv "target/${{ matrix.target }}/release/${{ matrix.asset_name }}" "./${{ matrix.asset_name }}"
 
       - name: Upload artifact for release job
         uses: actions/upload-artifact@v4
