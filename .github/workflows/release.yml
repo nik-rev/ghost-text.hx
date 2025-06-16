@@ -54,6 +54,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+      - name: on macOS we must explicitly install the target
+        if: matrix.os == 'macos-latest'
+        run: rustup target add x86_64-apple-darwin
+
       - name: Build dynamic library (cdylib)
         run: cargo build --release --target ${{ matrix.target }}
         env:
