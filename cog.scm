@@ -7,6 +7,7 @@
 (require-builtin helix/core/misc as misc::)
 (require-builtin steel/json as json::)
 (require-builtin steel/ffi)
+(require "steel/sync")
 
 (#%require-dylib "libghost_text"
   (only-in
@@ -36,15 +37,22 @@
 
 (Server::init_logging)
 
+(define (hx.ffi-with-context thunk)
+  (define task (task #f))
+  ;; Send on the main thread
+  (acquire-context-lock thunk task)
+  task)
+
 ; This function is called from RUST
 ; to update contents of the current buffer
 (define (update-document new-text)
   (log::info! "called this function")
-  (hx.block-on-task
+  (hx.ffi-with-context
     (lambda ()
       (helix.static.select_all)
       (helix.static.delete_selection)
-      (helix.static.insert_string new-text))))
+      (helix.static.insert_string new-text)))
+  void)
 
 (REGISTER_HELIX_BUFFER (function->ffi-function update-document))
 (define server (Server::new))
