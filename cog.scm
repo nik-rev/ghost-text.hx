@@ -2,6 +2,7 @@
 (require "helix/editor.scm")
 (require-builtin helix/core/text as text::)
 (require-builtin helix/core/static as static::)
+(require-builtin helix/core/misc as misc::)
 (require-builtin steel/json as json::)
 
 (#%require-dylib "libghost_text"
@@ -18,6 +19,8 @@
     (editor->text
       (editor->doc-id
         (editor-focus)))))
+
+; set-current-selection-object! Selection
 
 ; Get a `Vec<(u32, u32)>` corresponding to a list of selections [from, to]
 ; for the current file.
@@ -54,6 +57,7 @@
       (get-current-text)
       (get-current-selection))))
 
+; Callback to pass to the hooks for updating the ghost text server
 (define (update-if-running _)
   (when is-server-running
     (ghost-text-update)))

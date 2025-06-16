@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 
 use crate::data::{BrowserChange, EditorChange, Selection};
+use abi_stable::RMut;
+use abi_stable::std_types::RString;
 use futures_util::{SinkExt as _, StreamExt as _};
 
 use serde_json::json;
@@ -245,7 +247,14 @@ impl Server {
     }
 
     /// Update the Ghost Text server
-    pub fn update(self, text: String, selections: Vec<Vec<usize>>) {
+    pub fn update(
+        self,
+        text: String,
+        selections: Vec<Vec<usize>>, /* , mut s: RMut<'_, String> */
+    ) {
+        // log::error!("{s}");
+        // *s.get_mut() = "updated".into();
+
         let change = EditorChange {
             text,
             selections: selections
