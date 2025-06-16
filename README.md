@@ -35,3 +35,9 @@ Install the plugin itself:
 ```sh
 forge pkg install --git https://github.com/nik-rev/ghost-text.hx.git
 ```
+
+Add it in your `~/.config/helix/init.scm`:
+
+```sh
+(require ghost-text/ghost-text.scm)
+```

@@ -91,3 +91,5 @@
 ; The above does not account for when we simply insert characters,
 ; in which case we *also* want to notify the Ghost Text server
 (register-hook! "post-insert-char" update-if-running)
+
+(provide ghost-text-start ghost-text-end)
