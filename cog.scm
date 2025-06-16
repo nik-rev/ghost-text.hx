@@ -1,15 +1,19 @@
+(require "helix/ext.scm")
+(require (prefix-in helix.static. "helix/static.scm"))
 (require "helix/components.scm")
 (require "helix/editor.scm")
 (require-builtin helix/core/text as text::)
 (require-builtin helix/core/static as static::)
 (require-builtin helix/core/misc as misc::)
 (require-builtin steel/json as json::)
+(require-builtin steel/ffi)
 
 (#%require-dylib "libghost_text"
   (only-in
     Server::new
     Server::start
     Server::init_logging
+    REGISTER_HELIX_BUFFER
     Server::update
     Server::stop))
 
@@ -32,6 +36,17 @@
 
 (Server::init_logging)
 
+; This function is called from RUST
+; to update contents of the current buffer
+(define (update-document new-text)
+  (log::info! "called this function")
+  (hx.block-on-task
+    (lambda ()
+      (helix.static.select_all)
+      (helix.static.delete_selection)
+      (helix.static.insert_string new-text))))
+
+(REGISTER_HELIX_BUFFER (function->ffi-function update-document))
 (define server (Server::new))
 (define is-server-running #false)
 

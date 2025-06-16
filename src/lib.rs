@@ -10,7 +10,7 @@ mod api {
         steel_vm::ffi::{FFIModule, RegisterFFIFn as _},
     };
 
-    use crate::server::Server;
+    use crate::server::{self, Server};
 
     declare_module!(ghost_text_steel_module);
 
@@ -20,6 +20,7 @@ mod api {
 
         module
             .register_fn("Server::new", Server::new)
+            .register_fn("REGISTER_HELIX_BUFFER", server::register_helix_buffer)
             .register_fn("Server::init_logging", Server::init_logging)
             .register_fn("Server::start", Server::start)
             .register_fn("Server::stop", Server::stop)

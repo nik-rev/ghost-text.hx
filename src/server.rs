@@ -6,12 +6,12 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
 
 use crate::data::{BrowserChange, EditorChange, Selection};
-use abi_stable::RMut;
-use abi_stable::std_types::RString;
+use abi_stable::std_types::{RSliceMut, RString};
 use futures_util::{SinkExt as _, StreamExt as _};
 
 use serde_json::json;
 use steel::rvals::Custom;
+use steel::steel_vm::ffi::{FFIValue, HostRuntimeFunction};
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::UnboundedReceiver;
@@ -39,6 +39,17 @@ pub struct Server {
     change_tx: Arc<Mutex<Option<UnboundedSender<EditorChange>>>>,
 }
 
+static UPDATE_HELIX_BUFFER: OnceLock<HostRuntimeFunction> = OnceLock::new();
+
+/// Register the function to update a buffer's contents
+/// Update contents of the Helix buffer
+///
+/// Receives a `String` corresponding to contents
+/// of the new file
+pub fn register_helix_buffer(host: HostRuntimeFunction) {
+    UPDATE_HELIX_BUFFER.set(host).ok().expect("");
+}
+
 impl Custom for Server {}
 
 impl Server {
@@ -47,6 +58,33 @@ impl Server {
 
     /// Create a new server
     pub fn new() -> Self {
+        // WORKS
+
+        // UPDATE_HELIX_BUFFER
+        //     .get()
+        //     .expect("")
+        //     .call(RSliceMut::from_mut_slice(&mut [FFIValue::StringV(
+        //         RString::from("updates".to_string()),
+        //     )]))
+        //     .unwrap();
+
+        // WORKS
+
+        // let thread = thread::spawn(move || {
+        //     let rt = Runtime::new().expect("Failed to create Tokio runtime");
+        //     rt.block_on(async move {
+        //         UPDATE_HELIX_BUFFER
+        //             .get()
+        //             .expect("")
+        //             .call(RSliceMut::from_mut_slice(&mut [FFIValue::StringV(
+        //                 RString::from("updates".to_string()),
+        //             )]))
+        //             .unwrap();
+        //     });
+        // })
+        // .join()
+        // .unwrap();
+
         Self {
             sender: Arc::new(tokio::sync::Mutex::new(None)),
             thread_handle: Arc::new(Mutex::new(None)),
@@ -182,7 +220,16 @@ impl Server {
                     match msg {
                         Ok(Message::Text(txt)) => {
                             match serde_json::de::from_str::<BrowserChange>(&txt) {
-                                Ok(change) => log::info!("{change:?}"),
+                                Ok(change) => {
+                                    log::info!("calling FFI `update_buffer` with: {}", change.text);
+                                    UPDATE_HELIX_BUFFER
+                                        .get()
+                                        .expect("")
+                                        .call(RSliceMut::from_mut_slice(&mut [FFIValue::StringV(
+                                            RString::from(change.text),
+                                        )]))
+                                        .unwrap();
+                                }
                                 Err(err) => {
                                     log::error!("failed to deserialize browser change: {err}");
                                 }
@@ -247,14 +294,7 @@ impl Server {
     }
 
     /// Update the Ghost Text server
-    pub fn update(
-        self,
-        text: String,
-        selections: Vec<Vec<usize>>, /* , mut s: RMut<'_, String> */
-    ) {
-        // log::error!("{s}");
-        // *s.get_mut() = "updated".into();
-
+    pub fn update(self, text: String, selections: Vec<Vec<usize>>) {
         let change = EditorChange {
             text,
             selections: selections
