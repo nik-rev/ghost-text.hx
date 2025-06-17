@@ -9,16 +9,16 @@
      (
       (
        #:platform
-       "windows"
+       "x86_64-windows"
        #:url
        "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.2/ghost_text.dll")
       (
        #:platform
-       "macos"
+       "x86_64-macos"
        #:url
        "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.2/libghost_text.dylib")
       (
        #:platform
-       "linux"
+       "x86_64-linux"
        #:url
        "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.2/libghost_text.so")))))
