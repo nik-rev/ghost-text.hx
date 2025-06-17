@@ -1,24 +1,27 @@
 (define package-name 'ghost-text)
-(define version "0.1.2")
+(define version "0.1.4")
+
+(define dylib-name "ghost_text")
+(define repo "nik-rev/ghost-text.hx")
 
 (define dependencies '())
 
 (define dylibs
-  '((#:name "ghost_text"
+  '((#:name dylib-name
      #:urls
      (
       (
        #:platform
        "x86_64-windows"
        #:url
-       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.2/ghost_text.dll")
+       "https://github.com/" repo "/releases/download/v" version "/" dylib-name ".dll")
       (
        #:platform
        "x86_64-macos"
        #:url
-       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.2/libghost_text.dylib")
+       "https://github.com/" repo "/releases/download/v" version "/lib" dylib-name ".dylib")
       (
        #:platform
        "x86_64-linux"
        #:url
-       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.2/libghost_text.so")))))
+       "https://github.com/" repo "/releases/download/v" version "/lib" dylib-name ".so")))))
