@@ -2,10 +2,9 @@
 (define version "0.1.2")
 
 (define dependencies '())
-(define dylibs '((#:name "ghost-text")))
 
 (define dylibs
-  '((#:name "ghost-text"
+  '((#:name "ghost_text"
      #:urls
      (
       (
