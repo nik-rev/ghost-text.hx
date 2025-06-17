@@ -1,8 +1,10 @@
 # ghost-text.hx
 
-A Helix plugin written in Rust, that lets you use Helix to edit text inputs in the browser!
+A Helix plugin written in Rust, that lets you use Helix to edit text inputs *in the browser*!
 
 ## Preview
+
+https://github.com/user-attachments/assets/5b79390f-31f2-4e1e-adab-ce01ad39e355
 
 ## Usage
 
