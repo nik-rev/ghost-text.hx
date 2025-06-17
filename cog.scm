@@ -1,5 +1,5 @@
 (define package-name 'ghost-text)
-(define version "0.1.4")
+(define version "0.1.5")
 
 (define dylib-name "ghost_text")
 (define repo "nik-rev/ghost-text.hx")

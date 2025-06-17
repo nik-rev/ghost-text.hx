@@ -35,7 +35,7 @@
     (static::selection->ranges
       (static::current-selection-object *helix.cx*))))
 
-(Server::init_logging)
+; (Server::init_logging)
 
 (define (hx.ffi-with-context thunk)
   (define task (task #f))
