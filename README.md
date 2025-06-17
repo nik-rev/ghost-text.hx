@@ -43,3 +43,5 @@ Add it in your `~/.config/helix/init.scm`:
 ```sh
 (require ghost-text/ghost-text.scm)
 ```
+
+The above will add the `:ghost-text-start` and `:ghost-text-stop` commands automatically.
