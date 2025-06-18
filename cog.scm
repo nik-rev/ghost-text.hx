@@ -4,7 +4,7 @@
 (define dependencies '())
 
 (define dylibs
-  '((#:name dylib-name
+  '((#:name "ghost_text"
      #:urls
      (
       (
