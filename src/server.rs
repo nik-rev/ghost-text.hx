@@ -159,7 +159,11 @@ impl Server {
                 }
             };
 
-            let header = String::from_utf8_lossy(&buf[..bytes_to_read]);
+            let Some(bytes) = buf.get(..bytes_to_read) else {
+                return;
+            };
+
+            let header = String::from_utf8_lossy(bytes);
 
             if header.contains("Upgrade: websocket") {
                 let web_socket_stream =
