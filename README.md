@@ -38,12 +38,12 @@ Install the plugin itself:
 forge pkg install --git https://github.com/nik-rev/ghost-text.hx.git
 ```
 
-You will also need to install the dylib manually ([this process will be simpler in the future](https://github.com/mattwparas/steel/pull/424)):
+<!-- You will also need to install the dylib manually ([this process will be simpler in the future](https://github.com/mattwparas/steel/pull/424)): -->
 
-```sh
-cd ~/.steel/cog-sources/ghost-text.hx
-cargo steel-lib
-```
+<!-- ```sh -->
+<!-- cd ~/.steel/cog-sources/ghost-text.hx -->
+<!-- cargo steel-lib -->
+<!-- ``` -->
 
 Add it in your `~/.config/helix/init.scm`:
 
