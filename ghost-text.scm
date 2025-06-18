@@ -59,10 +59,12 @@
 
 ; Start the Ghost Text server
 (define (ghost-text-start)
-  (unless is-server-running
-    (Server::start server)
-    (set! is-server-running #true)
-    "Started Ghost Text server"))
+  (if is-server-running
+      "Ghost Text server is already running"
+      (begin
+        (Server::start server)
+        (set! is-server-running #true)
+        "Started Ghost Text server")))
 
 ; Stop the Ghost Text server
 (define (ghost-text-stop)
