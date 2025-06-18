@@ -46,7 +46,6 @@
 ; This function is called from RUST
 ; to update contents of the current buffer
 (define (update-document new-text)
-  (log::info! "called this function")
   (hx.ffi-with-context
     (lambda ()
       (helix.static.select_all)
