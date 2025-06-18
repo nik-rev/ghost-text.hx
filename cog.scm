@@ -1,5 +1,5 @@
 (define package-name 'ghost-text)
-(define version "0.1.5")
+(define version "0.1.6")
 
 (define dependencies '())
 
@@ -11,14 +11,14 @@
        #:platform
        "x86_64-windows"
        #:url
-       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.5/ghost_text.dll")
+       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.6/ghost_text.dll")
       (
        #:platform
        "x86_64-macos"
        #:url
-       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.5/libghost_text.dylib")
+       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.6/libghost_text.dylib")
       (
        #:platform
        "x86_64-linux"
        #:url
-       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.5/libghost_text.so")))))
+       "https://github.com/nik-rev/ghost-text.hx/releases/download/v0.1.6/libghost_text.so")))))
