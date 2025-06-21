@@ -24,7 +24,7 @@ futures-util = { version = "0.3", default-features = false }
 log = "0.4.27"
 
 # Steel itself
-steel-core = { rev = "0287954cc6a05bbd794f2636352bf64a71ea176d", git = "https://github.com/mattwparas/steel.git", version = "0.6.0", features = ["dylibs", "sync"] }
+steel-core = { rev = "80a1c96ff0d7b650fa8dd79b76e5391b9c1c116e", git = "https://github.com/mattwparas/steel.git", version = "0.7.0", features = ["dylibs", "sync"] }
 # Rust-to-Rust FFI with Helix
 abi_stable = "0.11.3"
 env_logger = "0.11.8"

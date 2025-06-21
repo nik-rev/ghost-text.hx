@@ -23,7 +23,7 @@ Build Helix with the plugin system:
 ```sh
 git clone git@github.com:mattwparas/helix.git helix-plugin
 cd helix-plugin
-git checkout f582c8b7
+git checkout 081f9e86ed63fe738c609e0fc944db10c150d4fd
 ```
 
 Install Steel and the `forge` package manager:
